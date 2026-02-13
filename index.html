@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Ultimate Quiz App</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+body {
+  margin:0;
+  font-family: 'Segoe UI', sans-serif;
+  background: linear-gradient(135deg,#1e3c72,#2a5298);
+  color:white;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  height:100vh;
+}
+
+.container {
+  width:90%;
+  max-width:600px;
+  background:rgba(255,255,255,0.1);
+  backdrop-filter: blur(20px);
+  padding:30px;
+  border-radius:20px;
+  box-shadow:0 0 40px rgba(0,0,0,0.4);
+  text-align:center;
+}
+
+h1 { margin-bottom:20px; }
+
+input, select {
+  width:90%;
+  padding:10px;
+  margin:8px;
+  border:none;
+  border-radius:10px;
+}
+
+button {
+  padding:10px 20px;
+  margin:10px;
+  border:none;
+  border-radius:10px;
+  cursor:pointer;
+  font-weight:bold;
+  background:#00c6ff;
+  color:black;
+  transition:0.3s;
+}
+button:hover { background:#0072ff; color:white; }
+
+.option {
+  display:block;
+  margin:10px;
+  padding:10px;
+  background:rgba(255,255,255,0.2);
+  border-radius:10px;
+  cursor:pointer;
+}
+.option:hover {
+  background:rgba(255,255,255,0.4);
+}
+
+.timer {
+  font-size:20px;
+  margin:10px;
+  font-weight:bold;
+  color:#ffd700;
+}
+
+.hidden { display:none; }
+
+.score-box {
+  background:rgba(0,0,0,0.4);
+  padding:15px;
+  border-radius:10px;
+  margin-top:15px;
+}
+</style>
+</head>
+<body>
+
+<div class="container">
+
+<div id="auth">
+<h1>Ultimate Quiz App</h1>
+<input id="username" placeholder="Username">
+<button onclick="login()">Login / Register</button>
+</div>
+
+<div id="dashboard" class="hidden">
+<h2>Welcome <span id="userDisplay"></span></h2>
+
+<select id="category">
+<option>Programming</option>
+<option>Math</option>
+<option>Science</option>
+<option>History</option>
+<option>Geography</option>
+<option>Sports</option>
+<option>Movies</option>
+<option>General Knowledge</option>
+<option>Technology</option>
+<option>Space</option>
+<option>Politics</option>
+<option>English</option>
+<option>Cybersecurity</option>
+<option>Business</option>
+<option>Current Affairs</option>
+</select>
+
+<select id="level">
+<option>Low</option>
+<option>Medium</option>
+<option>High</option>
+<option>Advanced</option>
+</select>
+
+<br>
+<button onclick="startQuiz()">Start Quiz</button>
+
+<div class="score-box">
+<p>Total Score: <span id="totalScore">0</span></p>
+<p>Level: <span id="userLevel">Low</span></p>
+<p>Achievements: <span id="achievements">None</span></p>
+</div>
+
+<button onclick="logout()">Logout</button>
+</div>
+
+<div id="quiz" class="hidden">
+<h3 id="question"></h3>
+<div id="options"></div>
+<div class="timer">Time Left: <span id="time">15</span>s</div>
+<button onclick="stopQuiz()">Stop Quiz</button>
+<button onclick="finishQuiz()">Submit & See Score</button>
+</div>
+
+<div id="result" class="hidden">
+<h2>Quiz Result</h2>
+<p>Your Score: <span id="finalScore"></span></p>
+<p>Percentage: <span id="percentage"></span>%</p>
+<p>Level: <span id="finalLevel"></span></p>
+<button onclick="goDashboard()">Back to Dashboard</button>
+</div>
+
+</div>
+
+<script>
+
+let currentUser = null;
+let questions = [];
+let currentIndex = 0;
+let score = 0;
+let timer;
+let timeLeft = 15;
+
+function login(){
+  const name = username.value;
+  if(!name) return alert("Enter username");
+
+  currentUser = name;
+  if(!localStorage.getItem(name)){
+    localStorage.setItem(name, JSON.stringify({
+      totalScore:0,
+      level:"Low",
+      achievements:[]
+    }));
+  }
+
+  userDisplay.innerText = name;
+  auth.classList.add("hidden");
+  dashboard.classList.remove("hidden");
+  loadUser();
+}
+
+function loadUser(){
+  const data = JSON.parse(localStorage.getItem(currentUser));
+  totalScore.innerText = data.totalScore;
+  userLevel.innerText = data.level;
+  achievements.innerText = data.achievements.join(", ") || "None";
+}
+
+function logout(){
+  location.reload();
+}
+
+function generateQuestions(){
+  questions = [];
+  for(let i=0;i<10;i++){
+    let num1 = Math.floor(Math.random()*20);
+    let num2 = Math.floor(Math.random()*20);
+    questions.push({
+      question: `What is ${num1} + ${num2}?`,
+      options:[num1+num2, num1+num2+1, num1+num2-1, num1+num2+2],
+      answer: num1+num2
+    });
+  }
+}
+
+function startQuiz(){
+  generateQuestions();
+  dashboard.classList.add("hidden");
+  quiz.classList.remove("hidden");
+  currentIndex=0;
+  score=0;
+  showQuestion();
+}
+
+function showQuestion(){
+  if(currentIndex>=questions.length){
+    finishQuiz();
+    return;
+  }
+
+  let q = questions[currentIndex];
+  question.innerText = q.question;
+  options.innerHTML="";
+  q.options.sort(()=>Math.random()-0.5);
+
+  q.options.forEach(opt=>{
+    let div = document.createElement("div");
+    div.className="option";
+    div.innerText=opt;
+    div.onclick=()=>{
+      if(opt==q.answer) score++;
+      currentIndex++;
+      resetTimer();
+      showQuestion();
+    }
+    options.appendChild(div);
+  });
+
+  startTimer();
+}
+
+function startTimer(){
+  timeLeft=15;
+  time.innerText=timeLeft;
+  timer=setInterval(()=>{
+    timeLeft--;
+    time.innerText=timeLeft;
+    if(timeLeft<=0){
+      clearInterval(timer);
+      currentIndex++;
+      showQuestion();
+    }
+  },1000);
+}
+
+function resetTimer(){
+  clearInterval(timer);
+}
+
+function stopQuiz(){
+  finishQuiz();
+}
+
+function finishQuiz(){
+  clearInterval(timer);
+  quiz.classList.add("hidden");
+  result.classList.remove("hidden");
+
+  let percent = Math.round((score/questions.length)*100);
+  let level="Low";
+  if(percent>40) level="Medium";
+  if(percent>60) level="High";
+  if(percent>80) level="Advanced";
+
+  finalScore.innerText=score;
+  percentage.innerText=percent;
+  finalLevel.innerText=level;
+
+  let data = JSON.parse(localStorage.getItem(currentUser));
+  data.totalScore += score;
+  data.level = level;
+
+  if(score==10 && !data.achievements.includes("Perfect Score")){
+    data.achievements.push("Perfect Score");
+  }
+  if(data.totalScore>=50 && !data.achievements.includes("Quiz Master")){
+    data.achievements.push("Quiz Master");
+  }
+
+  localStorage.setItem(currentUser, JSON.stringify(data));
+}
+
+function goDashboard(){
+  result.classList.add("hidden");
+  dashboard.classList.remove("hidden");
+  loadUser();
+}
+
+</script>
+
+</body>
+</html>
