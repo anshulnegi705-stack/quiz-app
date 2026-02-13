@@ -1,94 +1,112 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>Ultimate Quiz App</title>
+<title>Ultimate Pro Quiz</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <style>
 
 body{
   margin:0;
-  font-family:'Segoe UI',sans-serif;
-  background:linear-gradient(135deg,#667eea,#764ba2);
-  display:flex;
-  justify-content:center;
-  align-items:center;
-  height:100vh;
+  font-family:'Poppins',sans-serif;
+  background:linear-gradient(135deg,#141e30,#243b55);
   color:white;
+  overflow-x:hidden;
+}
+
+/* Animated background */
+body::before{
+  content:"";
+  position:fixed;
+  width:200%;
+  height:200%;
+  background:radial-gradient(circle,#00c6ff33,#0072ff11,#000000);
+  animation:moveBg 20s linear infinite;
+}
+@keyframes moveBg{
+  0%{transform:translate(0,0);}
+  50%{transform:translate(-200px,-200px);}
+  100%{transform:translate(0,0);}
 }
 
 .container{
-  width:90%;
-  max-width:700px;
-  background:rgba(255,255,255,0.1);
-  backdrop-filter:blur(20px);
+  max-width:900px;
+  margin:auto;
   padding:30px;
+}
+
+.hidden{ display:none; }
+
+.card{
+  background:rgba(255,255,255,0.08);
+  backdrop-filter:blur(20px);
+  padding:25px;
   border-radius:20px;
-  box-shadow:0 0 40px rgba(0,0,0,0.3);
+  box-shadow:0 0 40px rgba(0,0,0,0.5);
+  margin-top:20px;
+  animation:fadeIn 0.5s ease-in-out;
 }
 
-h1{
-  text-align:center;
+@keyframes fadeIn{
+  from{opacity:0;transform:translateY(20px);}
+  to{opacity:1;transform:translateY(0);}
 }
 
-#question{
-  font-size:20px;
-  margin:20px 0;
+h1,h2{ text-align:center; }
+
+button{
+  padding:12px 20px;
+  border:none;
+  border-radius:12px;
+  margin:8px;
+  cursor:pointer;
+  font-weight:bold;
+  background:linear-gradient(45deg,#00c6ff,#0072ff);
+  color:white;
+  transition:0.3s;
+}
+
+button:hover{
+  transform:scale(1.05);
+  box-shadow:0 0 15px #00c6ff;
 }
 
 .option{
-  background:rgba(255,255,255,0.2);
+  background:rgba(255,255,255,0.15);
   padding:12px;
   margin:10px 0;
   border-radius:10px;
   cursor:pointer;
   transition:0.3s;
 }
-
 .option:hover{
-  background:rgba(255,255,255,0.35);
+  background:rgba(255,255,255,0.3);
 }
 
-.correct{
-  background:#28a745 !important;
-}
+.correct{ background:#28a745 !important; }
+.wrong{ background:#dc3545 !important; }
 
-.wrong{
-  background:#dc3545 !important;
-}
-
-.info{
+.top-bar{
   display:flex;
   justify-content:space-between;
+  font-weight:bold;
   margin-bottom:15px;
-  font-weight:bold;
 }
 
-.timer{
-  color:#ffd700;
-}
+.timer{ color:#ffd700; }
 
-button{
-  padding:10px 20px;
-  border:none;
+select{
+  padding:10px;
   border-radius:10px;
-  background:#00c6ff;
-  color:black;
-  font-weight:bold;
-  cursor:pointer;
-  margin-top:15px;
+  border:none;
+  width:100%;
+  margin:10px 0;
 }
 
-button:hover{
-  background:#0072ff;
-  color:white;
-}
-
-.hidden{
-  display:none;
-}
-
-.result{
-  text-align:center;
+.history-item{
+  background:rgba(255,255,255,0.1);
+  padding:10px;
+  margin:8px 0;
+  border-radius:10px;
 }
 
 </style>
@@ -97,162 +115,170 @@ button:hover{
 
 <div class="container">
 
-<h1>🚀 Ultimate Quiz App</h1>
+<!-- HOME PAGE -->
+<div id="home" class="card">
+<h1>🚀 Ultimate Pro Quiz</h1>
+<p style="text-align:center;">Challenge yourself with beautiful interactive quizzes!</p>
+<div style="text-align:center;">
+<button onclick="goToCategories()">Start Quiz</button>
+<button onclick="openAdmin()">Admin Panel</button>
+</div>
+</div>
 
-<div id="quizBox">
+<!-- CATEGORY PAGE -->
+<div id="categories" class="card hidden">
+<h2>Select Category</h2>
+<select id="categorySelect">
+<option>Programming</option>
+<option>Science</option>
+<option>History</option>
+<option>Math</option>
+<option>General Knowledge</option>
+</select>
+<div style="text-align:center;">
+<button onclick="startQuiz()">Begin</button>
+<button onclick="goHome()">Back</button>
+</div>
+</div>
 
-<div class="info">
+<!-- QUIZ PAGE -->
+<div id="quizPage" class="card hidden">
+<div class="top-bar">
 <span>Score: <span id="score">0</span></span>
-<span>Question: <span id="qNumber">1</span>/10</span>
+<span>Q: <span id="qNumber">1</span>/15</span>
 <span class="timer">Time: <span id="time">15</span>s</span>
 </div>
 
-<div id="question"></div>
+<h3 id="question"></h3>
 <div id="options"></div>
 
+<div style="text-align:center;">
+<button onclick="nextQuestion()">Next</button>
+<button onclick="pauseQuiz()">Pause</button>
+<button onclick="resumeQuiz()">Resume</button>
+<button onclick="endQuiz()">Stop & See Score</button>
+</div>
 </div>
 
-<div id="resultBox" class="hidden result">
+<!-- RESULT PAGE -->
+<div id="resultPage" class="card hidden">
 <h2>Quiz Completed 🎉</h2>
 <p>Your Score: <span id="finalScore"></span></p>
 <p>Percentage: <span id="percentage"></span>%</p>
-<button onclick="restartQuiz()">Restart Quiz</button>
+<div style="text-align:center;">
+<button onclick="goHome()">Home</button>
+</div>
+</div>
+
+<!-- ADMIN PANEL -->
+<div id="adminPage" class="card hidden">
+<h2>Admin Panel - Quiz History</h2>
+<div id="history"></div>
+<div style="text-align:center;">
+<button onclick="goHome()">Back</button>
+</div>
 </div>
 
 </div>
 
 <script>
 
-const questions = [
-{
-question:"What does HTML stand for?",
-options:["Hyper Text Markup Language","Home Tool Markup Language","Hyperlinks Text Mark Language","Hyper Tool Multi Language"],
-answer:0
-},
-{
-question:"Which planet is known as the Red Planet?",
-options:["Earth","Mars","Jupiter","Venus"],
-answer:1
-},
-{
-question:"What is 5 + 7?",
-options:["10","11","12","13"],
-answer:2
-},
-{
-question:"Who wrote 'Romeo and Juliet'?",
-options:["Charles Dickens","William Shakespeare","Mark Twain","Leo Tolstoy"],
-answer:1
-},
-{
-question:"Which gas do plants absorb?",
-options:["Oxygen","Nitrogen","Carbon Dioxide","Hydrogen"],
-answer:2
-},
-{
-question:"Which language is used for styling web pages?",
-options:["HTML","JQuery","CSS","XML"],
-answer:2
-},
-{
-question:"Which is the largest ocean?",
-options:["Indian","Pacific","Atlantic","Arctic"],
-answer:1
-},
-{
-question:"What is the capital of France?",
-options:["Berlin","Madrid","Paris","Rome"],
-answer:2
-},
-{
-question:"What does CPU stand for?",
-options:["Central Processing Unit","Computer Personal Unit","Central Power Unit","Control Processing Unit"],
-answer:0
-},
-{
-question:"Which year did World War II end?",
-options:["1945","1939","1918","1965"],
-answer:0
-}
-];
-
-let currentQuestion=0;
+let questions=[];
+let currentIndex=0;
 let score=0;
 let timer;
 let timeLeft=15;
+let paused=false;
+let selectedAnswer=null;
+
+function generateQuestions(category){
+  questions=[];
+  for(let i=1;i<=15;i++){
+    questions.push({
+      question:`(${category}) Question ${i}: What is ${i} + ${i}?`,
+      options:[i+i, i+i+1, i+i-1, i+i+2],
+      answer:0
+    });
+  }
+}
+
+function goToCategories(){
+  home.classList.add("hidden");
+  categories.classList.remove("hidden");
+}
+
+function goHome(){
+  home.classList.remove("hidden");
+  categories.classList.add("hidden");
+  quizPage.classList.add("hidden");
+  resultPage.classList.add("hidden");
+  adminPage.classList.add("hidden");
+}
 
 function startQuiz(){
-  currentQuestion=0;
+  let category=categorySelect.value;
+  generateQuestions(category);
+  categories.classList.add("hidden");
+  quizPage.classList.remove("hidden");
+  currentIndex=0;
   score=0;
-  document.getElementById("score").innerText=score;
-  document.getElementById("resultBox").classList.add("hidden");
-  document.getElementById("quizBox").classList.remove("hidden");
   showQuestion();
 }
 
 function showQuestion(){
   resetTimer();
   timeLeft=15;
-  document.getElementById("time").innerText=timeLeft;
+  time.innerText=timeLeft;
+  selectedAnswer=null;
 
-  let q=questions[currentQuestion];
-  document.getElementById("question").innerText=q.question;
-  document.getElementById("qNumber").innerText=currentQuestion+1;
+  let q=questions[currentIndex];
+  question.innerText=q.question;
+  qNumber.innerText=currentIndex+1;
+  document.getElementById("score").innerText=score;
 
-  let optionsBox=document.getElementById("options");
-  optionsBox.innerHTML="";
-
-  q.options.forEach((option,index)=>{
+  options.innerHTML="";
+  q.options.forEach((opt,index)=>{
     let div=document.createElement("div");
     div.classList.add("option");
-    div.innerText=option;
+    div.innerText=opt;
     div.onclick=()=>selectAnswer(div,index);
-    optionsBox.appendChild(div);
+    options.appendChild(div);
   });
 
   startTimer();
 }
 
 function selectAnswer(element,index){
-  resetTimer();
-  let correctIndex=questions[currentQuestion].answer;
-  let options=document.querySelectorAll(".option");
+  if(selectedAnswer!==null) return;
+  selectedAnswer=index;
 
-  options.forEach((opt,i)=>{
-    if(i===correctIndex){
-      opt.classList.add("correct");
-    }
-  });
+  let correctIndex=questions[currentIndex].answer;
+  let allOptions=document.querySelectorAll(".option");
 
-  if(index===correctIndex){
-    score++;
-    document.getElementById("score").innerText=score;
-  }else{
+  allOptions[correctIndex].classList.add("correct");
+  if(index!==correctIndex){
     element.classList.add("wrong");
+  }else{
+    score++;
   }
+}
 
-  setTimeout(()=>{
-    currentQuestion++;
-    if(currentQuestion<questions.length){
-      showQuestion();
-    }else{
-      endQuiz();
-    }
-  },1000);
+function nextQuestion(){
+  if(currentIndex<questions.length-1){
+    currentIndex++;
+    showQuestion();
+  }else{
+    endQuiz();
+  }
 }
 
 function startTimer(){
   timer=setInterval(()=>{
-    timeLeft--;
-    document.getElementById("time").innerText=timeLeft;
-
-    if(timeLeft<=0){
-      resetTimer();
-      currentQuestion++;
-      if(currentQuestion<questions.length){
-        showQuestion();
-      }else{
-        endQuiz();
+    if(!paused){
+      timeLeft--;
+      time.innerText=timeLeft;
+      if(timeLeft<=0){
+        nextQuestion();
       }
     }
   },1000);
@@ -262,20 +288,53 @@ function resetTimer(){
   clearInterval(timer);
 }
 
+function pauseQuiz(){
+  paused=true;
+}
+
+function resumeQuiz(){
+  paused=false;
+}
+
 function endQuiz(){
-  document.getElementById("quizBox").classList.add("hidden");
-  document.getElementById("resultBox").classList.remove("hidden");
+  resetTimer();
+  quizPage.classList.add("hidden");
+  resultPage.classList.remove("hidden");
 
-  document.getElementById("finalScore").innerText=score+" / "+questions.length;
-  let percent=Math.round((score/questions.length)*100);
-  document.getElementById("percentage").innerText=percent;
+  finalScore.innerText=score+" / 15";
+  let percent=Math.round((score/15)*100);
+  percentage.innerText=percent;
+
+  saveHistory(percent);
 }
 
-function restartQuiz(){
-  startQuiz();
+function saveHistory(percent){
+  let history=JSON.parse(localStorage.getItem("quizHistory"))||[];
+  history.push({
+    date:new Date().toLocaleString(),
+    score:score,
+    percent:percent
+  });
+  localStorage.setItem("quizHistory",JSON.stringify(history));
 }
 
-startQuiz();
+function openAdmin(){
+  home.classList.add("hidden");
+  adminPage.classList.remove("hidden");
+  loadHistory();
+}
+
+function loadHistory(){
+  let history=JSON.parse(localStorage.getItem("quizHistory"))||[];
+  historyDiv=document.getElementById("history");
+  historyDiv.innerHTML="";
+  history.forEach(item=>{
+    let div=document.createElement("div");
+    div.classList.add("history-item");
+    div.innerText=`${item.date} | Score: ${item.score}/15 | ${item.percent}%`;
+    historyDiv.appendChild(div);
+  });
+}
 
 </script>
 
